@@ -17,7 +17,7 @@ local Targeting    = require("utils.targeting")
 local Casting      = require("utils.casting")
 
 local _ClassConfig = {
-    _version            = "(CUSTOM) Source: 1.1 - Live",
+    _version            = "1.2 - Live",
     _author             = "Derple, Grimmier, Algar",
     ['Modes']           = {
         'DPS',

@@ -17,7 +17,7 @@ local Targeting    = require("utils.targeting")
 local Casting      = require("utils.casting")
 
 local _ClassConfig = {
-    _version            = "1.1 - Live",
+    _version            = "(CUSTOM) Source: 1.1 - Live",
     _author             = "Derple, Grimmier, Algar",
     ['Modes']           = {
         'DPS',
@@ -119,6 +119,13 @@ local _ClassConfig = {
             "Corpseskin",
             "Shadowskin",
             "Wraithskin",
+            "Dull Pain",
+            "Force Shield",
+            "Manaskin",
+            "Diamondskin",
+            "Steelskin",
+            "Leatherskin",
+            "Shieldskin",
         },
         ['SelfSpellShield1'] = {
             "Shield of Fate VII",
@@ -181,7 +188,6 @@ local _ClassConfig = {
             "Call Skeleton Swarm",
         },
         ['Lifetap'] = {
-            ---HealthTaps >= LVL1
             "Soulrip VII",
             "Drain Essence XXIII",
             "Soullash",
@@ -242,7 +248,8 @@ local _ClassConfig = {
             "Frozen Leech",
             "Ashen Leech",
             "Dark Leech",
-            "Leech",
+            "Night Stalker",
+            "Zevfeer's Theft of Vitae",
         },
         ['ManaDrain'] = {
             --Mana Drain with Group Mana Recourse
@@ -773,6 +780,24 @@ local _ClassConfig = {
             "Intensify Death",
             "Focus Death",
         },
+        ['PetHealSpell'] = {
+            "Chilling Renewal XVI",
+            "Bracing Revival",
+            "Frigid Salubrity",
+            "Icy Revival",
+            "Algid Renewal",
+            "Icy Mending",
+            "Algid Mending",
+            "Chilled Mending",
+            "Gelid Mending",
+            "Icy Stitches",
+            "Wintry Revival",
+            "Chilling Renewal",
+            "Dark Salve",
+            "Touch of Death",
+            "Renew Bones",
+            "Mend Bones",
+        },
         ['FleshBuff'] = {
             "Flesh to Toxin",  -- Level 119
             "Flesh to Venom",  -- Level 109
@@ -874,6 +899,14 @@ local _ClassConfig = {
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Targeting.MobHasLowHP(Targeting.GetAutoTarget())
             end,
+        },
+        {
+            name = 'PetHealing',
+            state = 1,
+            steps = 1,
+            doFullRotation = true,
+            targetId = function(self) return mq.TLO.Me.Pet.ID() > 0 and { mq.TLO.Me.Pet.ID(), } or {} end,
+            cond = function(self, target) return (mq.TLO.Me.Pet.PctHPs() or 100) < Config:GetSetting('PetHealPct') end,
         },
     },
     ['Rotations']       = {
@@ -1276,6 +1309,27 @@ local _ClassConfig = {
                 end,
             },
         },
+        ['PetHealing']      = {
+            {
+                name = "Companion's Blessing",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return (mq.TLO.Me.Pet.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                end,
+            },
+            {
+                name_func = function() return Casting.CanUseAA("Replenish Companion") and "Replenish Companion" or "Mend Companion" end,
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return (mq.TLO.Me.Pet.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
+                end,
+            },
+            {
+                name = "PetHealSpell",
+                type = "Spell",
+                load_cond = function(self) return Config:GetSetting('DoPetHealSpell') end,
+            },
+        },
         ['Downtime']        = {
             {
                 name = "Mortifier's Unity",
@@ -1413,6 +1467,7 @@ local _ClassConfig = {
             name = "Default",
             -- cond = function(self) return true end, --Kept here for illustration, this line could be removed in this instance since we aren't using conditions.
             spells = {
+                { name = "PetHealSpell", cond = function(self) return Config:GetSetting('DoPetHealSpell') end, },
                 { name = "PoisonNuke1", cond = function(self) return not Core.GetResolvedActionMapItem('PoisonNuke2') end, },
                 { name = "PoisonNuke2", },
                 { name = "FireNuke", },
@@ -1469,6 +1524,28 @@ local _ClassConfig = {
             Default = 2,
             Min = 1,
             Max = 2,
+        },
+        ['DoPetHealSpell']    = {
+            DisplayName = "Pet Heal Spell",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "General Healing",
+            Index = 101,
+            Tooltip = "Mem and cast your Pet Heal (Salve) spell. AA Pet Heals are always used in emergencies.",
+            Default = false,
+            RequiresLoadoutChange = true,
+        },
+        ['PetHealPct']        = {
+            DisplayName = "Pet Heal Spell HP%",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "Healing Thresholds",
+            Index = 101,
+            Tooltip = "Use your pet heal spell when your pet is at or below this HP percentage.",
+
+            Default = 60,
+            Min = 1,
+            Max = 99,
         },
         ['BattleRez']         = {
             DisplayName = "Battle Rez",

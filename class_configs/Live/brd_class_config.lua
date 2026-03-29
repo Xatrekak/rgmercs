@@ -58,7 +58,7 @@ local Tooltips     = {
 }
 
 local _ClassConfig = {
-    _version            = "2.3 - Live",
+    _version            = "2.4 - Live",
     _author             = "Algar, Derple, Grimmier, Tiddliestix, SonicZentropy",
     ['Modes']           = {
         'General',
@@ -648,6 +648,11 @@ local _ClassConfig = {
         ['ThousandBlades'] = {
             "Thousand Blades",
         },
+        ['ResistDebuff'] = {
+            "Harmony of Tone",
+            "Harmony of Sound",
+            "Occlusion of Sound",
+        },
     },
     ['HelperFunctions'] = {
         SwapInst = function(type)
@@ -713,6 +718,7 @@ local _ClassConfig = {
                 { name = "SlowSong",      cond = function(self) return Config:GetSetting('DoSTSlow') end, },
                 { name = "AESlowSong",    cond = function(self) return Config:GetSetting('DoAESlow') end, },
                 { name = "DispelSong",    cond = function(self) return Config:GetSetting('DoDispel') end, },
+                { name = "ResistDebuff",   cond = function(self) return Config:GetSetting('DoResistDebuff') end, },
                 { name = "CureSong",      cond = function(self) return Config:GetSetting('UseCure') end, },
                 { name = "RunBuffSong",   cond = function(self) return Config:GetSetting('UseRunBuff') and not Casting.CanUseAA("Selo's Sonata") end, },
                 { name = "EndBreathSong", cond = function(self) return Config:GetSetting('UseEndBreath') end, },
@@ -823,7 +829,7 @@ local _ClassConfig = {
             name = 'Debuff',
             state = 1,
             steps = 1,
-            load_cond = function() return Config:GetSetting("DoSTSlow") or Config:GetSetting("DoAESlow") or Config:GetSetting("DoDispel") end,
+            load_cond = function() return Config:GetSetting("DoSTSlow") or Config:GetSetting("DoAESlow") or Config:GetSetting("DoResistDebuff") or Config:GetSetting("DoDispel") end,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.OkayToDebuff()
@@ -929,6 +935,13 @@ local _ClassConfig = {
                 load_cond = function(self) return Config:GetSetting('DoSTSlow') end,
                 cond = function(self, songSpell, target)
                     return Casting.DetSpellCheck(songSpell) and not mq.TLO.Target.Slowed() and not Casting.SlowImmuneTarget(target)
+                end,
+            },
+            {
+                name = "ResistDebuff",
+                type = "Song",
+                cond = function(self, songSpell)
+                    return Config:GetSetting('DoResistDebuff') and Casting.DetSpellCheck(songSpell)
                 end,
             },
             {
@@ -1466,6 +1479,16 @@ local _ClassConfig = {
             Category = "Slow",
             Index = 102,
             Tooltip = Tooltips.AESlowSong,
+            RequiresLoadoutChange = true,
+            Default = false,
+        },
+        ['DoResistDebuff']  = {
+            DisplayName = "Use Resist Debuff",
+            Group = "Abilities",
+            Header = "Debuffs",
+            Category = "Resist",
+            Index = 101,
+            Tooltip = "Use the Ancient: Chaos Chant or Harmony of Sound Resist Debuff.",
             RequiresLoadoutChange = true,
             Default = false,
         },
